@@ -1,245 +1,118 @@
-# 🔄 Cyclic Research Agent
+# FinSight Agent
 
-A sophisticated autonomous research system built with **LangGraph** that iteratively gathers, evaluates, and synthesizes information until research quality standards are met.
+[![CI](https://github.com/rohil01/Deep-Dive-Research-Agent/actions/workflows/ci.yml/badge.svg)](https://github.com/rohil01/Deep-Dive-Research-Agent/actions/workflows/ci.yml)
 
-## 🏗️ Architecture Overview
+FinSight Agent is an autonomous research analyst for Indian fintech. Ask it about RBI regulation or the payments market and it returns a cited Markdown report with the estimated cost of producing it.
 
-This is **not a linear pipeline**—it's a **state machine** that loops until the research is complete.
+Demo question: *What are RBI's latest guidelines for payment aggregators, and how do they affect UPI-first companies?*
+
+## Quick start
+
+Python 3.11 or 3.12.
+
+```bash
+pip install -e ".[dev]"
+# copy .env.example .env   on Windows;  cp .env.example .env  on macOS/Linux
+# then fill in GOOGLE_API_KEY and TAVILY_API_KEY
+finsight research "What are RBI's latest guidelines for payment aggregators, and how do they affect UPI-first companies?" --domain regulatory --max-iterations 3 -o report.md
+```
+
+Omit `--domain` and a cheap classifier chooses `regulatory`, `market`, or `general`. `python research_agent.py "your query"` still works and forwards to the same CLI.
+
+Keys: [Gemini](https://aistudio.google.com/app/apikey) and [Tavily](https://tavily.com).
+
+## Docker
+
+```bash
+docker build -t finsight .
+docker run --rm --env-file .env finsight research "What are RBI's latest guidelines for payment aggregators, and how do they affect UPI-first companies?" --domain regulatory -o report.md
+```
+
+The image runs as a non-root user. `-o report.md` writes inside the container. Mount the working directory to keep the file:
+
+```bash
+# Windows
+docker run --rm --env-file .env -v "%cd%":/work -w /work finsight research "your query" --domain regulatory -o report.md
+
+# macOS / Linux
+docker run --rm --env-file .env -v "$PWD":/work -w /work finsight research "your query" --domain regulatory -o report.md
+```
+
+The image does not contain `.env`. Pass it with `--env-file`.
+
+## API
+
+```bash
+uvicorn finsight.api:app --host 0.0.0.0 --port 8000
+```
+
+`POST /research` streams server-sent events from the LangGraph run: a `node` event for each step, then a `report` event whose Markdown includes the cost footer.
+
+```bash
+curl -N -X POST http://127.0.0.1:8000/research -H "Content-Type: application/json" -d "{\"query\":\"What are RBI's latest guidelines for payment aggregators?\",\"domain\":\"regulatory\",\"max_iterations\":3}"
+```
+
+## Domains
+
+| Domain | Search limited to | Report adds |
+| --- | --- | --- |
+| regulatory | rbi.org.in, npci.org.in, sebi.gov.in, pib.gov.in | Regulatory Implications, Compliance Timeline, circular number and date |
+| market | livemint.com, economictimes.indiatimes.com, moneycontrol.com, medianama.com, inc42.com, entrackr.com | Players, shares, volumes, and the dates those figures refer to |
+| general | open web | Executive summary, findings, analysis, citations, conclusion |
+
+## How a run moves
 
 ```mermaid
-graph TD
-    Start([User Query]) --> Planner[🧠 Planner Node<br/>Breaks query into sub-questions]
-    Planner --> Researcher[🔍 Researcher Node<br/>Searches & scrapes web]
-    Researcher --> Critic[🎯 Critic Node<br/>Evaluates quality]
-    
-    Critic -->|Research Incomplete| Planner
-    Critic -->|Research Complete| Writer[📝 Writer Node<br/>Generates final report]
-    Writer --> End([✅ Markdown Report])
-    
-    style Planner fill:#e1f5ff
-    style Researcher fill:#fff4e1
-    style Critic fill:#ffe1f5
-    style Writer fill:#e1ffe1
+flowchart TD
+  startNode[UserQuery] --> resolveDomain[ResolveDomain]
+  resolveDomain --> planner[Planner]
+  planner -->|"pending_questions only"| researcher[Researcher]
+  researcher -->|"append notes, clear queue"| critic[Critic]
+  critic -->|"gaps and under cap"| planner
+  critic -->|"complete or cap"| writer[Writer]
+  writer --> footer[CostFooter]
+  footer --> endNode[MarkdownReport]
 ```
 
-### 🧠 The Four Nodes
+The planner writes only new sub-questions into `pending_questions`. The researcher searches that queue and clears it. `notes`, `plan`, and `usage` accumulate through an append reducer, so each node returns only the items it added. The critic stops at `MAX_ITERATIONS` (default 3) even if gaps remain. A critique or report that fails to parse does not crash the run: the critic approves what was gathered, and the writer emits a short fallback from the raw summaries.
 
-#### 1. **Planner** (Manager)
-- **Input**: User query or critique feedback
-- **Action**: Breaks query into 3-5 specific, researchable sub-questions
-- **Output**: JSON array of sub-questions
-- **Example**: 
-  ```json
-  [
-    "What are the main types of solid-state electrolytes?",
-    "Which companies are leading solid-state battery development in 2024?",
-    "What are the current challenges in commercial production?"
-  ]
-  ```
+## Engineering highlights
 
-#### 2. **Researcher** (Worker)
-- **Action**: For each sub-question:
-  1. Uses **Tavily Search** to gather information
-  2. Analyzes if results are sufficient
-  3. If vague → triggers **WebBaseLoader** to scrape full content
-- **Output**: Accumulated notes with summaries and sources
-- **Smart Logic**: Only scrapes when search snippets are insufficient
+- **State duplication.** `notes` and `plan` use an append reducer. Nodes that returned the whole state re-appended every note on each loop, so reports grew copies of the same research. Nodes now return only the keys they change, and only the new notes or questions.
+- **Repeated searches.** The researcher used to walk the full plan every iteration. `pending_questions` is the work queue: answered questions stay in `plan` and are not searched again.
+- **Structured outputs.** Planner, search analysis, critic, and domain classification use Pydantic models with `with_structured_output`. The writer still returns Markdown. Token counts are read from the raw response (`include_raw=True`) so structured calls are not invisible to the cost footer.
+- **Fail-open critic and writer.** A broken critique ends the loop and still produces a report. A broken writer returns the summaries already gathered instead of raising.
 
-#### 3. **Critic** (Quality Control)
-- **Action**: Evaluates completeness of gathered research
-- **Decision Logic**:
-  - ✅ Information complete → Proceed to Writer
-  - ⚠️ Gaps detected → Loop back to Planner with specific feedback
-- **Safety**: Max 3 iterations to prevent infinite loops
-- **Output**: Critique feedback or approval
+## Cost
 
-#### 4. **Writer** (Publisher)
-- **Action**: Synthesizes all research notes into a comprehensive report
-- **Output**: Professional Markdown document with:
-  - Executive Summary
-  - Key Findings
-  - Detailed Analysis
-  - Citations with URLs
-  - Conclusion
+Every report ends with a **Run cost (estimated)** table: per-call node, model, and input/output tokens, plus a USD estimate. The CLI prints the same totals. Rates are `PRICE_INPUT_PER_MILLION` and `PRICE_OUTPUT_PER_MILLION` in `.env` (defaults are estimates, not an invoice). Token counts come from provider usage metadata.
 
----
+## Evals
 
-## 🚀 Quick Start
+[evals/questions.yaml](evals/questions.yaml) holds eight fintech questions with expected-coverage keywords. `python evals/run_evals.py` runs each one and asks the fast Gemini model to score coverage, citation presence, citation faithfulness, and structure. It writes [evals/results.json](evals/results.json) and [evals/results.md](evals/results.md). The checked-in table is a placeholder until that command has been run with API keys. The script exits without inventing scores when a key is missing.
 
-### Prerequisites
+## Sample reports
+
+Commands for a regulatory PA-guidelines report and a UPI market-share report are in [examples/README.md](examples/README.md). The Markdown files are added after a keyed run.
+
+## Tracing
+
+LangSmith stays off unless you opt in. Set `LANGSMITH_TRACING`, `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT` (or the older `LANGCHAIN_TRACING_V2` / `LANGCHAIN_API_KEY` / `LANGCHAIN_PROJECT` names) as listed in [.env.example](.env.example). A traced-run screenshot is added after a real traced run, not before.
+
+## Development
 
 ```bash
-Python 3.10+
-pip install -r requirements.txt
+ruff check src tests evals
+pytest
 ```
 
-### API Keys Setup
+CI runs that pair on Python 3.11 and 3.12.
 
-Create a `.env` file in the project root:
-
-```env
-GOOGLE_API_KEY=your_google_api_key_here
-TAVILY_API_KEY=your_tavily_api_key_here
-```
-
-**Get API Keys:**
-- **Google Gemini**: [https://makersuite.google.com/app/apikey](https://makersuite.google.com/app/apikey)
-- **Tavily Search**: [https://tavily.com](https://tavily.com) (Free tier: 1000 searches/month)
-
-### Installation
-
-```bash
-# Clone or download the project
-git clone <your-repo-url>
-cd cyclic-research-agent
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create .env file with your API keys
-echo "GOOGLE_API_KEY=your_key" >> .env
-echo "TAVILY_API_KEY=your_key" >> .env
-```
-
-### Run the Agent
-
-```bash
-python research_agent.py
-```
-
-**Customize the query** in `research_agent.py`:
-
-```python
-if __name__ == "__main__":
-    query = "Your research question here"
-    report = run_research(query)
-```
-
----
-
-## 📊 State Management
-
-The agent uses a **shared state dictionary** that flows through all nodes:
-
-```python
-class ResearchState(TypedDict):
-    query: str                    # Original user query
-    plan: List[str]               # List of sub-questions
-    notes: List[dict]             # Accumulated research (grows over iterations)
-    iteration: int                # Current loop count
-    critique: str                 # Feedback from critic
-    final_report: str             # Final markdown output
-    should_continue: bool         # Loop control flag
-```
-
----
-
-## 🔄 Execution Flow Example
-
-### Iteration 1
-```
-🧠 PLANNER: Creates 5 sub-questions
-   ↓
-🔍 RESEARCHER: Searches for each, scrapes 2 websites
-   ↓
-🎯 CRITIC: "Missing cost analysis and commercialization timeline"
-   ↓ (Loop back)
-```
-
-### Iteration 2
-```
-🧠 PLANNER: Adds 2 new questions about costs & timeline
-   ↓
-🔍 RESEARCHER: Gathers additional data
-   ↓
-🎯 CRITIC: "Research complete!"
-   ↓
-📝 WRITER: Generates final report → research_report.md
-```
-
----
-
-## 🎯 Key Features
-
-### ✅ Adaptive Planning
-- Initial plan from user query
-- Iterative refinement based on critic feedback
-
-### ✅ Intelligent Web Scraping
-- Only scrapes when search results are insufficient
-- Prevents unnecessary API calls
-
-### ✅ Quality Assurance
-- Built-in critic validates completeness
-- Prevents premature report generation
-
-### ✅ Safety Mechanisms
-- Max 3 iterations to prevent infinite loops
-- Error handling for failed searches/scrapes
-
-### ✅ Structured Output
-- Professional Markdown reports
-- Citations with source URLs
-- Organized by themes
-
----
-
-## 🛠️ Customization
-
-### Change LLM Model
-
-```python
-# Switch to different Gemini models
-llm = ChatGoogleGenerativeAI(model="gemini-pro")  # Standard
-llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp")  # Fastest
-```
-
-### Adjust Search Results
-
-```python
-search_tool = TavilySearch(max_results=5)  # Get more results
-```
-
-### Modify Iteration Limit
-
-```python
-# In critic_node()
-is_complete = critique["is_complete"] or iteration >= 5  # Allow 5 iterations
-```
-
----
-
-## 📁 Project Structure
+## Layout
 
 ```
-cyclic-research-agent/
-│
-├── research_agent.py          # Main agent implementation
-├── .env                        # API keys (not committed)
-├── requirements.txt            # Python dependencies
-├── README.md                   # This file
-└── research_report.md          # Generated output (created after run)
+src/finsight/     agent package (CLI, graph, API)
+evals/            question set and judge harness
+examples/         commands for sample reports
+research_agent.py shim onto the CLI
 ```
-
----
-
-## 🧪 Example Queries
-
-```python
-# Technology Research
-"Latest advancements in solid-state batteries in 2024"
-
-# Market Analysis
-"Current state of quantum computing commercialization"
-
-# Scientific Review
-"Recent breakthroughs in CRISPR gene editing techniques"
-
-# Business Intelligence
-"Major mergers and acquisitions in AI companies during 2024"
-```
-
----
-
-
-**Happy Researching! 🚀**

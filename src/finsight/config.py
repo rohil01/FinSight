@@ -22,9 +22,17 @@ class Settings(BaseSettings):
 
     # Model / agent behaviour
     model_name: str = Field(default="gemini-3-pro-preview", description="Gemini model id")
+    fast_model_name: str = Field(
+        default="gemini-2.5-flash",
+        description="Cheaper model for domain classification and eval judging",
+    )
     max_iterations: int = Field(default=3, ge=1, description="Max plan→research→critique loops")
     max_search_results: int = Field(default=3, ge=1, description="Tavily results per sub-question")
     scrape_char_limit: int = Field(default=2000, ge=100, description="Max chars kept from a scraped page")
+
+    # Estimated USD per 1M tokens. Override to match the model you actually run.
+    price_input_per_million: float = Field(default=1.25, ge=0)
+    price_output_per_million: float = Field(default=10.0, ge=0)
 
     def validate_keys(self) -> None:
         """Fail fast with a clear message if required API keys are missing."""
