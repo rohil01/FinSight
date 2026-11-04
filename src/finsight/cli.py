@@ -39,7 +39,7 @@ def _setup_logging(verbose: bool) -> None:
         handlers=[RichHandler(console=console, show_path=False, rich_tracebacks=True)],
     )
     if not verbose:
-        for name in ("httpx", "urllib3", "langchain", "google"):
+        for name in ("httpx", "urllib3", "langchain", "openai"):
             logging.getLogger(name).setLevel(logging.WARNING)
 
 
@@ -93,7 +93,7 @@ def research(
     ] = None,
     model: Annotated[
         str | None,
-        typer.Option("--model", help="Gemini model id (default from config)"),
+        typer.Option("--model", help="NVIDIA NIM model id (default from config)"),
     ] = None,
     verbose: Annotated[
         bool,

@@ -84,19 +84,31 @@ def apply_cost_footer(report: str, usage: list[dict]) -> str:
 
 
 def _token_counts(raw) -> tuple:
-    """Read input and output token counts from a LangChain response."""
+    """Read input and output token counts from a LangChain response.
+
+    NVIDIA NIM messages expose usage_metadata. Older payloads keep the same
+    numbers under response_metadata.token_usage as prompt_tokens and
+    completion_tokens.
+    """
     if raw is None:
         return 0, 0
     meta = getattr(raw, "usage_metadata", None)
     if meta is None and isinstance(raw, dict):
         meta = raw.get("usage_metadata")
-    if meta is None:
+    if not meta:
+        response_meta = getattr(raw, "response_metadata", None)
+        if response_meta is None and isinstance(raw, dict):
+            response_meta = raw.get("response_metadata")
+        if isinstance(response_meta, dict):
+            meta = response_meta.get("token_usage") or response_meta.get("usage")
+    if not meta:
         return 0, 0
     if not isinstance(meta, dict):
         meta = {
-            "input_tokens": getattr(meta, "input_tokens", 0),
-            "output_tokens": getattr(meta, "output_tokens", 0),
+            "input_tokens": getattr(meta, "input_tokens", 0) or getattr(meta, "prompt_tokens", 0),
+            "output_tokens": getattr(meta, "output_tokens", 0)
+            or getattr(meta, "completion_tokens", 0),
         }
-    input_tokens = meta.get("input_tokens") or meta.get("prompt_token_count") or 0
-    output_tokens = meta.get("output_tokens") or meta.get("candidates_token_count") or 0
+    input_tokens = meta.get("input_tokens") or meta.get("prompt_tokens") or 0
+    output_tokens = meta.get("output_tokens") or meta.get("completion_tokens") or 0
     return int(input_tokens), int(output_tokens)

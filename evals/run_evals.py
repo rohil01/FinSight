@@ -1,7 +1,7 @@
 """Score the fintech question set with a live research run and a flash judge.
 
 Writes evals/results.json and evals/results.md. Exits without writing scores
-when GOOGLE_API_KEY or TAVILY_API_KEY is missing.
+when NVIDIA_API_KEY or TAVILY_API_KEY is missing.
 """
 import json
 import sys
@@ -71,7 +71,7 @@ def _markdown(rows: list) -> str:
     lines.extend(
         [
             "",
-            "Scores are 0–5 from `gemini` via `FAST_MODEL_NAME`, except citation presence.",
+            "Scores are 0–5 from the fast NVIDIA NIM via `FAST_MODEL_NAME`, except citation presence.",
             "Regenerate with `python evals/run_evals.py`.",
             "",
         ]

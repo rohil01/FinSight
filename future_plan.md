@@ -36,12 +36,12 @@
 
 ### A4. Observability + cost tracking (Day 7)
 - [x] Replace prints with structured `logging` (node, iteration, question context)
-- [ ] LangSmith tracing (env-var opt-in) + traced-run screenshot in README
+- [x] LangSmith tracing (env-var opt-in) + traced-run screenshot in README
 - [x] Token/cost tracking from `usage_metadata` per node → end-of-run summary table + cost footer in every report
 
 ### A5. Minimal eval harness (Days 8–9)
 - [x] `evals/questions.yaml` — 6–8 fintech research questions with expected-coverage keywords
-- [ ] `evals/run_evals.py` — LLM-as-judge (gemini-flash) scores coverage, citation presence, citation faithfulness, structure → `results.json` + Markdown score table in README
+- [ ] `evals/run_evals.py` — LLM-as-judge (fast NVIDIA NIM) scores coverage, citation presence, citation faithfulness, structure → `results.json` + Markdown score table in README
 
 ### A6. API, Docker, README polish (Days 9–10)
 - [x] FastAPI `POST /research` with SSE streaming of LangGraph node events via `graph.astream()`
@@ -72,7 +72,7 @@
 ### B4. Eval suite v2 + benchmarks (Week 5, ~2–3 days)
 - [ ] Expand to 15–20 questions across domain profiles
 - [ ] Computed grounding-precision metric from the B2 fact-checker (claims-supported ratio)
-- [ ] Cost/latency/quality benchmark: gemini-pro vs gemini-flash, sequential vs parallel — table + chart in README
+- [ ] Cost/latency/quality benchmark: Nemotron Super vs Nemotron Nano, sequential vs parallel — table + chart in README
 - [ ] Optional: nightly 3-question smoke eval in GitHub Actions
 
 ### B5. Deployment + demo UI (Week 5, ~2–3 days)
@@ -87,7 +87,7 @@
 ## Resume pitch lines
 
 **Plan B version:**
-> Built **FinSight**, an autonomous multi-agent research system (LangGraph, Gemini) for Indian fintech regulatory & market intelligence — hybrid RAG over RBI circulars + curated web search, parallel researcher fan-out, claim-level citation verification, LLM-as-judge eval suite, and per-run cost tracking; shipped with CI, Docker, streaming FastAPI, and a live demo.
+> Built **FinSight**, an autonomous multi-agent research system (LangGraph, NVIDIA NIMs) for Indian fintech regulatory & market intelligence — hybrid RAG over RBI circulars + curated web search, parallel researcher fan-out, claim-level citation verification, LLM-as-judge eval suite, and per-run cost tracking; shipped with CI, Docker, streaming FastAPI, and a live demo.
 
 **Plan A version:**
 > Built an autonomous LangGraph research agent specialized for Indian fintech regulation (RBI/NPCI sources) — structured LLM outputs, iterative plan-critique loops, eval harness with citation-faithfulness scoring, cost tracking, tests + CI, Docker, and a streaming FastAPI endpoint.

@@ -1,7 +1,7 @@
 """Set dummy API keys before the finsight package is imported."""
 import os
 
-os.environ.setdefault("GOOGLE_API_KEY", "test-google")
+os.environ.setdefault("NVIDIA_API_KEY", "test-nvidia")
 os.environ.setdefault("TAVILY_API_KEY", "test-tavily")
 
 

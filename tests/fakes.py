@@ -13,7 +13,7 @@ class FakeLLM:
         parent = self
 
         class _Bound:
-            def invoke(self, messages):
+            def invoke(self, messages, config=None):
                 parsed = parent.on_structured(schema, messages)
                 raw = SimpleNamespace(
                     usage_metadata={"input_tokens": 12, "output_tokens": 4},

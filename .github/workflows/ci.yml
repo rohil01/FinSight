@@ -11,7 +11,7 @@ jobs:
       matrix:
         python-version: ["3.11", "3.12"]
     env:
-      GOOGLE_API_KEY: test-google
+      NVIDIA_API_KEY: test-nvidia
       TAVILY_API_KEY: test-tavily
     steps:
       - uses: actions/checkout@v4

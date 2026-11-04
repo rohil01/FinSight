@@ -1,7 +1,7 @@
 """Pydantic models for structured LLM outputs.
 
-Every LLM call in the agent goes through `llm.with_structured_output(Model)`
-with one of these schemas — no manual JSON-fence parsing anywhere.
+Planner, researcher, critic, and domain classification parse one of these
+schemas from the model response.
 """
 from typing import Literal
 

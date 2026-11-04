@@ -10,17 +10,30 @@ def test_usage_event_reads_token_metadata():
         def __init__(self):
             self.usage_metadata = {"input_tokens": 15, "output_tokens": 5}
 
-    event = usage_event("planner", _Raw(), "gemini-test")
+    event = usage_event("planner", _Raw(), "nvidia/nemotron-test")
     assert event == {
         "node": "planner",
-        "model": "gemini-test",
+        "model": "nvidia/nemotron-test",
         "input_tokens": 15,
         "output_tokens": 5,
     }
 
 
+def test_usage_event_reads_nvidia_token_usage():
+    class _Raw:
+        def __init__(self):
+            self.usage_metadata = None
+            self.response_metadata = {
+                "token_usage": {"prompt_tokens": 40, "completion_tokens": 12}
+            }
+
+    event = usage_event("researcher", _Raw(), "nvidia/nemotron-test")
+    assert event["input_tokens"] == 40
+    assert event["output_tokens"] == 12
+
+
 def test_missing_metadata_counts_as_zero():
-    event = usage_event("writer", None, "gemini-test")
+    event = usage_event("writer", None, "nvidia/nemotron-test")
     assert event["input_tokens"] == 0
     assert event["output_tokens"] == 0
 

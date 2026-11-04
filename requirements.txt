@@ -6,7 +6,7 @@ langgraph==1.2.19
 langchain==1.4.8
 langchain-core==1.7.4
 langchain-community==0.4.2
-langchain-google-genai==4.4.2
+langchain-nvidia-ai-endpoints==1.5.0
 langchain-tavily==0.2.18
 
 # Parsing / scraping

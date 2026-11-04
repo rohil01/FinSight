@@ -2,7 +2,7 @@
 
 No scored run yet. This file is the score table the harness fills in.
 
-With `GOOGLE_API_KEY` and `TAVILY_API_KEY` set:
+With `NVIDIA_API_KEY` and `TAVILY_API_KEY` set:
 
 ```bash
 python evals/run_evals.py
