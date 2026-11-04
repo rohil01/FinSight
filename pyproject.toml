@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "finsight"
 version = "0.2.0"
-description = "Autonomous research agent for Indian fintech regulation and the payments market"
+description = "Autonomous LangGraph research agent for Indian fintech, using Tavily and NVIDIA NIMs"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -47,4 +47,6 @@ target-version = "py310"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+# "." keeps `import tests` working when CI runs the pytest script.
+# `python -m pytest` adds the cwd itself; the script entry point does not.
+pythonpath = [".", "src"]

@@ -1,4 +1,4 @@
-"""FinSight — autonomous cyclic research agent built on LangGraph."""
+"""FinSight — autonomous cyclic research agent for Indian fintech, built on LangGraph and NVIDIA NIMs."""
 from .graph import build_graph, run_research
 
 __version__ = "0.2.0"

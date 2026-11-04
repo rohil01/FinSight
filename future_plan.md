@@ -89,8 +89,17 @@
 **Plan B version:**
 > Built **FinSight**, an autonomous multi-agent research system (LangGraph, NVIDIA NIMs) for Indian fintech regulatory & market intelligence — hybrid RAG over RBI circulars + curated web search, parallel researcher fan-out, claim-level citation verification, LLM-as-judge eval suite, and per-run cost tracking; shipped with CI, Docker, streaming FastAPI, and a live demo.
 
+**Current description:**
+
+FinSight Agent | Python, LangGraph, Tavily, NVIDIA NIMs  
+github.com/rohil01/Deep-Dive-Research-Agent
+
+- Designed a cyclic LangGraph research system for Indian fintech that decomposes a query into sub-questions, searches only the unanswered queue, and stops when the critic accepts the evidence or the iteration cap is reached.
+- Scoped Tavily search and page scraping to regulatory sources (RBI, NPCI, SEBI, PIB) or market sources (Mint, Economic Times, Moneycontrol, MediaNama, Inc42, Entrackr), and filtered hits with structured relevance judgments before they enter the report.
+- Shipped NVIDIA NIM structured outputs, per-run token and cost tracking, an LLM-as-judge eval harness, optional LangSmith tracing, tests and CI, Docker, and a streaming FastAPI endpoint that returns a cited Markdown report.
+
 **Plan A version:**
-> Built an autonomous LangGraph research agent specialized for Indian fintech regulation (RBI/NPCI sources) — structured LLM outputs, iterative plan-critique loops, eval harness with citation-faithfulness scoring, cost tracking, tests + CI, Docker, and a streaming FastAPI endpoint.
+> Built an autonomous LangGraph research agent specialized for Indian fintech regulation (RBI/NPCI sources) — NVIDIA NIM structured outputs, iterative plan-critique loops, eval harness with citation-faithfulness scoring, cost tracking, tests + CI, Docker, and a streaming FastAPI endpoint.
 
 **README tagline:** *FinSight Agent — an autonomous research analyst for Indian fintech. Ask it about RBI regulation or the payments market; get back a verified, cited report — with the exact cost of producing it.*
 

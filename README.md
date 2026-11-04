@@ -4,6 +4,12 @@
 
 FinSight Agent is an autonomous research analyst for Indian fintech. Ask it about RBI regulation or the payments market and it returns a cited Markdown report with the estimated cost of producing it.
 
+**Python, LangGraph, Tavily, NVIDIA NIMs**
+
+- A cyclic LangGraph loop decomposes a question into sub-questions, searches only the ones still unanswered, and stops when a critic finds the evidence sufficient or the iteration cap is hit.
+- Regulatory runs search RBI, NPCI, SEBI, and PIB; market runs search Mint, Economic Times, Moneycontrol, MediaNama, Inc42, and Entrackr. Tavily results and scraped pages are kept only when a structured relevance check says they answer the question.
+- Reports are written by an NVIDIA NIM, with per-call token and cost totals, an LLM-as-judge eval harness, optional LangSmith traces, tests and CI, Docker, and a streaming FastAPI endpoint.
+
 Demo question: *What are RBI's latest guidelines for payment aggregators, and how do they affect UPI-first companies?*
 
 ## Quick start
