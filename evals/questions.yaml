@@ -1,0 +1,90 @@
+# Fintech questions for the LLM-as-judge harness.
+# `python evals/run_evals.py` scores a live run. It does not invent results.
+
+- id: pa-guidelines-upi
+  domain: regulatory
+  question: >-
+    What are RBI's latest guidelines for payment aggregators, and how do they
+    affect UPI-first companies?
+  keywords:
+    - payment aggregator
+    - escrow
+    - UPI
+    - authorisation
+    - compliance
+
+- id: digital-lending
+  domain: regulatory
+  question: >-
+    What does the RBI digital lending guideline require of lending service
+    providers and regulated entities?
+  keywords:
+    - digital lending
+    - lending service provider
+    - key fact statement
+    - cooling-off
+    - direct disbursal
+
+- id: ppi-master-direction
+  domain: regulatory
+  question: What are the current RBI master direction requirements for prepaid payment instruments?
+  keywords:
+    - prepaid payment instrument
+    - PPI
+    - KYC
+    - full-KYC
+    - outstanding balance
+
+- id: card-tokenisation
+  domain: regulatory
+  question: >-
+    How do RBI card-on-file tokenisation rules work, and what must merchants
+    and payment aggregators do?
+  keywords:
+    - tokenisation
+    - card-on-file
+    - token requestor
+    - guest checkout
+    - merchant
+
+- id: pa-cross-border
+  domain: regulatory
+  question: >-
+    What rules apply to cross-border payment aggregators under RBI's payment
+    aggregator framework?
+  keywords:
+    - cross-border
+    - payment aggregator
+    - import
+    - export
+    - authorised dealer
+
+- id: upi-market-share
+  domain: market
+  question: How has UPI market share shifted among PhonePe, Google Pay, and Paytm?
+  keywords:
+    - UPI
+    - PhonePe
+    - Google Pay
+    - Paytm
+    - market share
+
+- id: pa-market-landscape
+  domain: market
+  question: Who are the main payment aggregator companies in India and how is that market structured?
+  keywords:
+    - payment aggregator
+    - Razorpay
+    - Cashfree
+    - PayU
+    - market
+
+- id: credit-on-upi
+  domain: market
+  question: How is credit on UPI changing volumes and the competitive position of UPI apps?
+  keywords:
+    - credit on UPI
+    - RuPay
+    - credit
+    - volume
+    - NPCI

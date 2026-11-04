@@ -1,9 +1,9 @@
 """Pydantic models for structured LLM outputs.
 
-Every LLM call in the agent goes through `llm.with_structured_output(Model)`
-with one of these schemas — no manual JSON-fence parsing anywhere.
+Planner, researcher, critic, and domain classification parse one of these
+schemas from the model response.
 """
-from typing import List, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 class ResearchPlan(BaseModel):
     """Output of the planner node: a list of researchable sub-questions."""
 
-    sub_questions: List[str] = Field(
+    sub_questions: list[str] = Field(
         description="Specific, concrete, researchable sub-questions",
         min_length=1,
     )
@@ -28,9 +28,17 @@ class SearchAnalysis(BaseModel):
         default=False,
         description="Whether a page should be scraped for more detail",
     )
-    url_to_scrape: Optional[str] = Field(
+    url_to_scrape: str | None = Field(
         default=None,
         description="URL to scrape if needs_scraping is true, else null",
+    )
+
+
+class DomainChoice(BaseModel):
+    """Output of the cheap domain classifier used when --domain is omitted."""
+
+    domain: Literal["regulatory", "market", "general"] = Field(
+        description="regulatory for rules and circulars, market for shares and volumes, else general"
     )
 
 
@@ -43,7 +51,7 @@ class Critique(BaseModel):
     feedback: str = Field(
         description="Specific gaps to address, or 'Research is complete'"
     )
-    missing_aspects: List[str] = Field(
+    missing_aspects: list[str] = Field(
         default_factory=list,
         description="Aspects of the query not yet covered",
     )

@@ -5,17 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "finsight"
 version = "0.2.0"
-description = "Autonomous cyclic research agent built on LangGraph (planner → researcher → critic → writer)"
+description = "Autonomous LangGraph research agent for Indian fintech, using Tavily and NVIDIA NIMs"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = "MIT"
 authors = [{ name = "Rohil" }]
 dependencies = [
     "langgraph>=0.2.60",
     "langchain>=0.3.14",
     "langchain-core>=0.3.29",
     "langchain-community>=0.3.14",
-    "langchain-google-genai>=2.0.8",
+    "langchain-nvidia-ai-endpoints>=0.3.0",
     "langchain-tavily>=0.1.0",
     "beautifulsoup4>=4.12.3",
     "python-dotenv>=1.0.1",
@@ -23,12 +23,16 @@ dependencies = [
     "pydantic-settings>=2.7.0",
     "typer>=0.15.0",
     "rich>=13.9.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.32.0",
+    "pyyaml>=6.0.2",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.3.0",
     "ruff>=0.8.0",
+    "httpx>=0.27.0",
 ]
 
 [project.scripts]
@@ -43,3 +47,6 @@ target-version = "py310"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# "." keeps `import tests` working when CI runs the pytest script.
+# `python -m pytest` adds the cwd itself; the script entry point does not.
+pythonpath = [".", "src"]

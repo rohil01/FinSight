@@ -9,43 +9,43 @@
 ## Plan A — 1–2 Weeks
 
 ### A1. Core correctness & restructure (Days 1–3)
-- [ ] Split `research_agent.py` into a package: `src/finsight/` (`schemas.py`, `state.py`, `config.py`, `nodes.py`, `graph.py`, `tools.py`, `prompts.py`, `cli.py`)
-- [ ] Replace all manual JSON parsing (` ```json ` fence splitting, `response.content[-1]['text']`) with Pydantic models + `llm.with_structured_output()`
-- [ ] Fix state-duplication bugs:
-  - [ ] Nodes return only the keys they change — never `{**state, ...}` (currently re-appends all notes through the `operator.add` reducer on every node pass)
-  - [ ] Add `pending_questions` to state — planner writes only new questions, researcher consumes & clears it (stops re-searching answered questions; ~50–70% API cost cut per run)
-- [ ] Add try/except + graceful fallbacks in critic/writer nodes (parse failure → default "complete", not crash)
-- [ ] Config via `pydantic-settings` + `.env`; validate API keys at startup
-- [ ] Typer CLI: `finsight research "query" --domain regulatory --max-iterations 3 -o report.md` with `rich` progress output
-- [ ] Housekeeping: `.env.example`, pinned `requirements.txt` (add missing `python-dotenv`, plus `pydantic-settings`, `typer`, `rich`), `pyproject.toml`
+- [x] Split `research_agent.py` into a package: `src/finsight/` (`schemas.py`, `state.py`, `config.py`, `nodes.py`, `graph.py`, `tools.py`, `prompts.py`, `cli.py`)
+- [x] Replace all manual JSON parsing (` ```json ` fence splitting, `response.content[-1]['text']`) with Pydantic models + `llm.with_structured_output()`
+- [x] Fix state-duplication bugs:
+  - [x] Nodes return only the keys they change — never `{**state, ...}` (currently re-appends all notes through the `operator.add` reducer on every node pass)
+  - [x] Add `pending_questions` to state — planner writes only new questions, researcher consumes & clears it (stops re-searching answered questions; ~50–70% API cost cut per run)
+- [x] Add try/except + graceful fallbacks in critic/writer nodes (parse failure → default "complete", not crash)
+- [x] Config via `pydantic-settings` + `.env`; validate API keys at startup
+- [x] Typer CLI: `finsight research "query" --domain regulatory --max-iterations 3 -o report.md` with `rich` progress output
+- [x] Housekeeping: `.env.example`, pinned `requirements.txt` (add missing `python-dotenv`, plus `pydantic-settings`, `typer`, `rich`), `pyproject.toml`
 
 ### A2. Tests + CI (Days 3–4)
-- [ ] pytest: schema validation tests; node tests with mocked LLM/Tavily
-- [ ] Named regression test for the duplication bug (2 loop iterations → assert note count, no re-searched questions)
-- [ ] Graph routing + iteration-cap tests
-- [ ] GitHub Actions: ruff + pytest matrix (Python 3.11/3.12), CI badge in README
+- [x] pytest: schema validation tests; node tests with mocked LLM/Tavily
+- [x] Named regression test for the duplication bug (2 loop iterations → assert note count, no re-searched questions)
+- [x] Graph routing + iteration-cap tests
+- [x] GitHub Actions: ruff + pytest matrix (Python 3.11/3.12), CI badge in README
 
 ### A3. Fintech specialization (Days 5–6) — the differentiator
-- [ ] Domain profiles: `regulatory` / `market` / `general`, selected by CLI flag or cheap classifier
-- [ ] Curated Tavily `include_domains`:
+- [x] Domain profiles: `regulatory` / `market` / `general`, selected by CLI flag or cheap classifier
+- [x] Curated Tavily `include_domains`:
   - Regulatory → rbi.org.in, npci.org.in, sebi.gov.in, pib.gov.in
   - Market → livemint.com, economictimes.indiatimes.com, moneycontrol.com, medianama.com, inc42.com, entrackr.com
-- [ ] Fintech prompt templates: regulatory planner covers circular text / effective dates / affected entities (PA/PG/PPI) / compliance timelines; writer adds "Regulatory Implications" + "Compliance Timeline" sections and cites circular number + date
+- [x] Fintech prompt templates: regulatory planner covers circular text / effective dates / affected entities (PA/PG/PPI) / compliance timelines; writer adds "Regulatory Implications" + "Compliance Timeline" sections and cites circular number + date
 - [ ] Commit 2–3 example reports in `examples/` (e.g., RBI PA guidelines impact; UPI market-share trends)
-- [ ] Rebrand repo: tagline + README hero section
+- [x] Rebrand repo: tagline + README hero section
 
 ### A4. Observability + cost tracking (Day 7)
-- [ ] Replace prints with structured `logging` (node, iteration, question context)
-- [ ] LangSmith tracing (env-var opt-in) + traced-run screenshot in README
-- [ ] Token/cost tracking from `usage_metadata` per node → end-of-run summary table + cost footer in every report
+- [x] Replace prints with structured `logging` (node, iteration, question context)
+- [x] LangSmith tracing (env-var opt-in) + traced-run screenshot in README
+- [x] Token/cost tracking from `usage_metadata` per node → end-of-run summary table + cost footer in every report
 
 ### A5. Minimal eval harness (Days 8–9)
-- [ ] `evals/questions.yaml` — 6–8 fintech research questions with expected-coverage keywords
-- [ ] `evals/run_evals.py` — LLM-as-judge (gemini-flash) scores coverage, citation presence, citation faithfulness, structure → `results.json` + Markdown score table in README
+- [x] `evals/questions.yaml` — 6–8 fintech research questions with expected-coverage keywords
+- [ ] `evals/run_evals.py` — LLM-as-judge (fast NVIDIA NIM) scores coverage, citation presence, citation faithfulness, structure → `results.json` + Markdown score table in README
 
 ### A6. API, Docker, README polish (Days 9–10)
-- [ ] FastAPI `POST /research` with SSE streaming of LangGraph node events via `graph.astream()`
-- [ ] Slim non-root `Dockerfile`; `docker run` one-liner works with `.env`
+- [x] FastAPI `POST /research` with SSE streaming of LangGraph node events via `graph.astream()`
+- [x] Slim non-root `Dockerfile`; `docker run` one-liner works with `.env`
 - [ ] README overhaul: Mermaid diagram (with `pending_questions` flow), terminal-recording GIF, "Engineering highlights" section naming the bugs fixed and why, eval + cost tables, sample-report links
 
 **Deliberately cut from Plan A:** Streamlit UI, RAG, checkpointing, multi-model — deferred to Plan B.
@@ -72,7 +72,7 @@
 ### B4. Eval suite v2 + benchmarks (Week 5, ~2–3 days)
 - [ ] Expand to 15–20 questions across domain profiles
 - [ ] Computed grounding-precision metric from the B2 fact-checker (claims-supported ratio)
-- [ ] Cost/latency/quality benchmark: gemini-pro vs gemini-flash, sequential vs parallel — table + chart in README
+- [ ] Cost/latency/quality benchmark: Nemotron Super vs Nemotron Nano, sequential vs parallel — table + chart in README
 - [ ] Optional: nightly 3-question smoke eval in GitHub Actions
 
 ### B5. Deployment + demo UI (Week 5, ~2–3 days)
@@ -87,10 +87,19 @@
 ## Resume pitch lines
 
 **Plan B version:**
-> Built **FinSight**, an autonomous multi-agent research system (LangGraph, Gemini) for Indian fintech regulatory & market intelligence — hybrid RAG over RBI circulars + curated web search, parallel researcher fan-out, claim-level citation verification, LLM-as-judge eval suite, and per-run cost tracking; shipped with CI, Docker, streaming FastAPI, and a live demo.
+> Built **FinSight**, an autonomous multi-agent research system (LangGraph, NVIDIA NIMs) for Indian fintech regulatory & market intelligence — hybrid RAG over RBI circulars + curated web search, parallel researcher fan-out, claim-level citation verification, LLM-as-judge eval suite, and per-run cost tracking; shipped with CI, Docker, streaming FastAPI, and a live demo.
+
+**Current description:**
+
+FinSight Agent | Python, LangGraph, Tavily, NVIDIA NIMs  
+github.com/rohil01/Deep-Dive-Research-Agent
+
+- Designed a cyclic LangGraph research system for Indian fintech that decomposes a query into sub-questions, searches only the unanswered queue, and stops when the critic accepts the evidence or the iteration cap is reached.
+- Scoped Tavily search and page scraping to regulatory sources (RBI, NPCI, SEBI, PIB) or market sources (Mint, Economic Times, Moneycontrol, MediaNama, Inc42, Entrackr), and filtered hits with structured relevance judgments before they enter the report.
+- Shipped NVIDIA NIM structured outputs, per-run token and cost tracking, an LLM-as-judge eval harness, optional LangSmith tracing, tests and CI, Docker, and a streaming FastAPI endpoint that returns a cited Markdown report.
 
 **Plan A version:**
-> Built an autonomous LangGraph research agent specialized for Indian fintech regulation (RBI/NPCI sources) — structured LLM outputs, iterative plan-critique loops, eval harness with citation-faithfulness scoring, cost tracking, tests + CI, Docker, and a streaming FastAPI endpoint.
+> Built an autonomous LangGraph research agent specialized for Indian fintech regulation (RBI/NPCI sources) — NVIDIA NIM structured outputs, iterative plan-critique loops, eval harness with citation-faithfulness scoring, cost tracking, tests + CI, Docker, and a streaming FastAPI endpoint.
 
 **README tagline:** *FinSight Agent — an autonomous research analyst for Indian fintech. Ask it about RBI regulation or the payments market; get back a verified, cited report — with the exact cost of producing it.*
 
